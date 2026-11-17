@@ -31,11 +31,11 @@ async function loadCorps(key: string): Promise<CorpRow[]> {
   if (!xmlName) throw new Error("corpCode 압축 안에 XML이 없습니다");
   const xml = strFromU8(files[xmlName]);
   const rows: CorpRow[] = [];
-  const re =
-    /<list>\s*<corp_code>(\d+)<\/corp_code>\s*<corp_name>([^<]*)<\/corp_name>\s*<stock_code>\s*([^<]*?)\s*<\/stock_code>/g;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(xml))) {
-    if (m[3]) rows.push({ code: m[1], name: m[2], stock: m[3] }); // 상장사만
+  const field = (b: string, n: string) =>
+    b.match(new RegExp(`<${n}>\\s*([^<]*?)\\s*</${n}>`))?.[1] ?? "";
+  for (const m of xml.matchAll(/<list>([\s\S]*?)<\/list>/g)) {
+    const stock = field(m[1], "stock_code");
+    if (stock) rows.push({ code: field(m[1], "corp_code"), name: field(m[1], "corp_name"), stock }); // 상장사만
   }
   corpCache = { rows, at: Date.now() };
   return rows;

@@ -23,9 +23,12 @@ try {
   if (!name) throw new Error("압축 안에 XML 없음 (인증키 오류일 수 있음)");
   const xml = strFromU8(files[name]);
   const rows = [];
-  const re = /<list>\s*<corp_code>(\d+)<\/corp_code>\s*<corp_name>([^<]*)<\/corp_name>\s*<stock_code>\s*([^<]*?)\s*<\/stock_code>/g;
-  let m;
-  while ((m = re.exec(xml))) if (m[3]) rows.push([m[1], m[2], m[3]]);
+  // 항목 순서(영문명 유무 등)에 상관없이 <list> 블록마다 필요한 값만 꺼낸다
+  const field = (b, n) => (b.match(new RegExp(`<${n}>\\s*([^<]*?)\\s*</${n}>`)) || [])[1] || "";
+  for (const m of xml.matchAll(/<list>([\s\S]*?)<\/list>/g)) {
+    const stock = field(m[1], "stock_code");
+    if (stock) rows.push([field(m[1], "corp_code"), field(m[1], "corp_name"), stock]);
+  }
   if (rows.length === 0) throw new Error("상장사 0건");
   writeFileSync(new URL("../src/data/corps.json", import.meta.url), JSON.stringify(rows));
   console.log(`[build-corps] 상장사 ${rows.length}곳 저장`);

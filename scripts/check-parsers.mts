@@ -5,9 +5,9 @@ import { fetchNews } from "../src/lib/news";
 
 const json = (o: unknown) => new Response(JSON.stringify(o));
 const corpXml = `<?xml version="1.0" encoding="UTF-8"?><result>
-<list><corp_code>00126380</corp_code><corp_name>삼성전자</corp_name><stock_code>005930</stock_code><modify_date>20240101</modify_date></list>
+<list><corp_code>00126380</corp_code><corp_name>삼성전자</corp_name><corp_eng_name>SAMSUNG</corp_eng_name><stock_code>005930</stock_code><modify_date>20240101</modify_date></list>
 <list><corp_code>00000001</corp_code><corp_name>비상장회사</corp_name><stock_code> </stock_code><modify_date>20240101</modify_date></list>
-<list><corp_code>00164779</corp_code><corp_name>SK하이닉스</corp_name><stock_code>000660</stock_code><modify_date>20240101</modify_date></list></result>`;
+<list><corp_code>00164779</corp_code><corp_name>SK하이닉스</corp_name><corp_eng_name>SK hynix</corp_eng_name><stock_code>000660</stock_code><modify_date>20240101</modify_date></list></result>`;
 
 globalThis.fetch = (async (input: RequestInfo | URL) => {
   const url = String(input);
