@@ -35,10 +35,10 @@ input[type="range"] {
 
 /* 무지개 그라데이션 (상단바 줄·로고 글자·선택 탭 밑줄) */
 .rainbow-bar {
-  background: linear-gradient(90deg, #ef4444, #f97316, #eab308, #22c55e, #3b82f6, #a855f7);
+  background: linear-gradient(90deg, #ef4444 0%, #f97316 6%, #eab308 12%, #22c55e 22%, #06b6d4 36%, #38bdf8 50%, #3b82f6 66%, #6366f1 84%, #a855f7 100%);
 }
 .rainbow-text {
-  background: linear-gradient(90deg, #f87171, #fb923c, #facc15, #4ade80, #60a5fa, #c084fc);
+  background: linear-gradient(90deg, #f87171 0%, #fb923c 6%, #facc15 12%, #4ade80 22%, #22d3ee 36%, #38bdf8 50%, #60a5fa 66%, #818cf8 84%, #c084fc 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;

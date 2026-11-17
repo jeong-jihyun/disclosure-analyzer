@@ -7,10 +7,13 @@ export function Logo({ size = 32 }: { size?: number }) {
       <defs>
         <linearGradient id="da-rainbow" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
           <stop offset="0" stopColor="#ef4444" />
-          <stop offset="0.2" stopColor="#f97316" />
-          <stop offset="0.4" stopColor="#eab308" />
-          <stop offset="0.6" stopColor="#22c55e" />
-          <stop offset="0.8" stopColor="#3b82f6" />
+          <stop offset="0.07" stopColor="#f97316" />
+          <stop offset="0.14" stopColor="#eab308" />
+          <stop offset="0.24" stopColor="#22c55e" />
+          <stop offset="0.38" stopColor="#06b6d4" />
+          <stop offset="0.52" stopColor="#38bdf8" />
+          <stop offset="0.68" stopColor="#3b82f6" />
+          <stop offset="0.85" stopColor="#6366f1" />
           <stop offset="1" stopColor="#a855f7" />
         </linearGradient>
       </defs>
