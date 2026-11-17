@@ -21,7 +21,7 @@ const TYPES = [
 ];
 
 export function Feed({ bundle }: { bundle: CompanyBundle }) {
-  const [seg, setSeg] = useState<"disc" | "news">("disc");
+  const [seg, setSeg] = useState<"disc" | "news">(bundle.disclosures.length === 0 && bundle.news.length > 0 ? "news" : "disc");
   return (
     <>
       <div className="grid grid-cols-2 rounded-xl bg-slate-200/70 p-1 text-sm">

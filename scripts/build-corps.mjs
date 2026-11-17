@@ -27,11 +27,18 @@ try {
   const field = (b, n) => (b.match(new RegExp(`<${n}>\\s*([^<]*?)\\s*</${n}>`)) || [])[1] || "";
   for (const m of xml.matchAll(/<list>([\s\S]*?)<\/list>/g)) {
     const stock = field(m[1], "stock_code");
-    if (stock) rows.push([field(m[1], "corp_code"), field(m[1], "corp_name"), stock]);
+    if (stock) rows.push([field(m[1], "corp_code"), field(m[1], "corp_name"), stock, field(m[1], "modify_date")]);
   }
   if (rows.length === 0) throw new Error("상장사 0건");
-  writeFileSync(new URL("../src/data/corps.json", import.meta.url), JSON.stringify(rows));
-  console.log(`[build-corps] 상장사 ${rows.length}곳 저장`);
+  // 합병·상장폐지로 사라진 옛 법인이 같은 이름으로 남아 있으면(예: 구 삼성물산) 데이터가 없어 화면이 비므로,
+  // 같은 이름 중 정보 수정일이 1년 넘게 오래된 것은 뺀다. 수정일이 비슷하면 둘 다 둔다.
+  const newest = new Map();
+  for (const r of rows) if (r[3] > (newest.get(r[1]) ?? "")) newest.set(r[1], r[3]);
+  const year = (d) => Number(d.slice(0, 4)) * 12 + Number(d.slice(4, 6));
+  const kept = rows.filter((r) => !r[3] || year(newest.get(r[1])) - year(r[3]) < 12);
+  const out = kept.map((r) => r.slice(0, 3));
+  writeFileSync(new URL("../src/data/corps.json", import.meta.url), JSON.stringify(out));
+  console.log(`[build-corps] 상장사 ${out.length}곳 저장 (옛 법인 ${rows.length - out.length}곳 제외)`);
 } catch (e) {
   console.log(`[build-corps] 실패(무시하고 계속): ${e.message}`);
 }

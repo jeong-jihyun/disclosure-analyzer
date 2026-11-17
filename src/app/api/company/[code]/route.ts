@@ -53,6 +53,11 @@ export async function GET(_req: NextRequest, ctx: RouteContext<"/api/company/[co
     if (holders.status === "rejected" || divs.status === "rejected" || officers.status === "rejected")
       notes.push("주주·배당·임원 정보 일부를 가져오지 못했습니다.");
 
+    const empty = history.length === 0 && disc.status === "fulfilled" && disc.value.length === 0;
+    if (empty)
+      notes.push(
+        "이 항목에는 DART 재무·공시 자료가 없습니다. 합병·상장폐지로 더 이상 쓰이지 않는 옛 법인일 수 있어요. 같은 이름의 다른 항목을 검색해서 종목코드가 다른 것을 선택해 보세요.",
+      );
     const bundle: CompanyBundle = {
       info,
       financials: history.length ? history[history.length - 1] : null,
