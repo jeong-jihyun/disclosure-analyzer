@@ -14,12 +14,12 @@ import { Card, Disclaimer, Notice, RiskChip, SentimentChip } from "./ui";
 
 type Tab = "summary" | "detail" | "feed" | "sim" | "info";
 
-const TABS: { id: Tab; label: string; icon: string }[] = [
-  { id: "summary", label: "요약", icon: "📊" },
-  { id: "detail", label: "상세", icon: "📈" },
-  { id: "feed", label: "공시·뉴스", icon: "📰" },
-  { id: "sim", label: "시뮬레이션", icon: "🧪" },
-  { id: "info", label: "기업정보", icon: "🏢" },
+const TABS: { id: Tab; label: string }[] = [
+  { id: "summary", label: "요약" },
+  { id: "detail", label: "상세" },
+  { id: "feed", label: "공시·뉴스" },
+  { id: "sim", label: "시뮬레이션" },
+  { id: "info", label: "기업정보" },
 ];
 
 export function CompanyView({ code }: { code: string }) {
@@ -100,9 +100,8 @@ export function CompanyView({ code }: { code: string }) {
                 window.scrollTo({ top: 0 });
               }}
               aria-current={tab === t.id ? "page" : undefined}
-              className={`relative flex flex-col items-center gap-0.5 py-2 text-[11px] ${tab === t.id ? "font-semibold text-white" : "text-slate-400"}`}
+              className={`relative py-3 text-[13px] ${tab === t.id ? "font-semibold text-white" : "text-slate-400"}`}
             >
-              <span className="text-base leading-none">{t.icon}</span>
               {t.label}
               {tab === t.id && <span className="rainbow-bar absolute inset-x-2 bottom-0 h-[3px] rounded-full" />}
             </button>
