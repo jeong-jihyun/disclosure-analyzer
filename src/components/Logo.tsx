@@ -1,4 +1,4 @@
-// 공시 분석(Disclosure Analysis) 로고: 무지개 링 레이더 + 반짝이는 신호점
+// 공시 분석(Disclosure Analysis) 로고: 연필로 체크(✓) 표시하는 모양
 export const SITE_NAME = "Disclosure Analysis";
 
 export function Logo({ size = 32 }: { size?: number }) {
@@ -18,11 +18,13 @@ export function Logo({ size = 32 }: { size?: number }) {
         </linearGradient>
       </defs>
       <rect width="64" height="64" rx="15" fill="#0f172a" />
-      <circle cx="32" cy="33" r="21" fill="none" stroke="url(#da-rainbow)" strokeWidth="5" />
-      <circle cx="32" cy="33" r="11" fill="none" stroke="#fff" strokeOpacity="0.3" strokeWidth="2" />
-      <path d="M32 33 L47 18" stroke="url(#da-rainbow)" strokeWidth="3.5" strokeLinecap="round" />
-      <circle cx="32" cy="33" r="3" fill="#fff" />
-      <circle cx="47" cy="18" r="4.5" fill="#fff" />
+      <path d="M12 35 L24 47 L40 27" fill="none" stroke="url(#da-rainbow)" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round" />
+      <g transform="translate(40 27) rotate(-45)">
+        <path d="M0 0 L8 -4 L8 4 Z" fill="#fbbf24" />
+        <path d="M0 0 L2.6 -1.3 L2.6 1.3 Z" fill="#0f172a" />
+        <rect x="8" y="-4" width="15" height="8" fill="#38bdf8" />
+        <rect x="23" y="-4" width="4" height="8" rx="1" fill="#f97316" />
+      </g>
     </svg>
   );
 }
