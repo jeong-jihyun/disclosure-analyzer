@@ -7,6 +7,7 @@ import { FAV_KEY, pushRecent, toggleFavorite, useStoredList } from "@/lib/storag
 import type { CompanyBundle, Metrics, ScoreResult } from "@/lib/types";
 import { PartBar, Radar, ScoreGauge } from "./charts";
 import { Detail } from "./Detail";
+import { Logo, SITE_NAME } from "./Logo";
 import { Feed } from "./Feed";
 import { Simulator } from "./Simulator";
 import { Card, Disclaimer, Notice, RiskChip, SentimentChip } from "./ui";
@@ -67,25 +68,49 @@ export function CompanyView({ code }: { code: string }) {
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <header className="sticky top-0 z-10 flex items-center gap-2 bg-slate-900 px-3 py-3 text-white">
-        <Link href="/" aria-label="뒤로" className="rounded-full px-2 py-1 text-lg active:bg-white/10">←</Link>
-        <div className="min-w-0 flex-1">
-          <h1 className="truncate text-base font-semibold">{bundle.info.name}</h1>
-          <p className="truncate text-[11px] text-slate-300">
-            {[bundle.info.market, bundle.info.stockCode].filter(Boolean).join(" · ")}
-          </p>
+      <header className="sticky top-0 z-20 bg-slate-900 text-white">
+        <div className="rainbow-bar h-1" />
+        <div className="flex items-center gap-2 px-3 py-2">
+          <Link href="/" aria-label="처음으로" className="flex items-center gap-1 rounded-full py-1 pr-1 text-lg active:bg-white/10">
+            <span className="px-1">←</span>
+            <Logo size={30} />
+          </Link>
+          <div className="min-w-0 flex-1">
+            <p className="rainbow-text text-[10px] font-bold uppercase tracking-wider">{SITE_NAME}</p>
+            <h1 className="truncate text-base font-semibold leading-tight">{bundle.info.name}</h1>
+            <p className="truncate text-[11px] text-slate-300">
+              {[bundle.info.market, bundle.info.stockCode].filter(Boolean).join(" · ")}
+            </p>
+          </div>
+          <button
+            onClick={() => toggleFavorite(bundle.info)}
+            aria-label={isFav ? "관심 기업에서 빼기" : "관심 기업에 담기"}
+            aria-pressed={isFav}
+            className="rounded-full px-2 py-1 text-xl active:bg-white/10"
+          >
+            {isFav ? "★" : "☆"}
+          </button>
         </div>
-        <button
-          onClick={() => toggleFavorite(bundle.info)}
-          aria-label={isFav ? "관심 기업에서 빼기" : "관심 기업에 담기"}
-          aria-pressed={isFav}
-          className="rounded-full px-2 py-1 text-xl active:bg-white/10"
-        >
-          {isFav ? "★" : "☆"}
-        </button>
+        <nav aria-label="메뉴" className="grid grid-cols-5 border-t border-white/10">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => {
+                setTab(t.id);
+                window.scrollTo({ top: 0 });
+              }}
+              aria-current={tab === t.id ? "page" : undefined}
+              className={`relative flex flex-col items-center gap-0.5 py-2 text-[11px] ${tab === t.id ? "font-semibold text-white" : "text-slate-400"}`}
+            >
+              <span className="text-base leading-none">{t.icon}</span>
+              {t.label}
+              {tab === t.id && <span className="rainbow-bar absolute inset-x-2 bottom-0 h-[3px] rounded-full" />}
+            </button>
+          ))}
+        </nav>
       </header>
 
-      <main className="flex-1 space-y-3 p-3 pb-24">
+      <main className="flex-1 space-y-3 p-3 pb-8">
         {bundle.notice && <Notice tone={bundle.demo ? "info" : "warn"}>{bundle.notice}</Notice>}
         {tab === "summary" && <Summary bundle={bundle} score={score} />}
         {tab === "detail" && <Detail bundle={bundle} />}
@@ -94,23 +119,6 @@ export function CompanyView({ code }: { code: string }) {
         {tab === "info" && <Info bundle={bundle} />}
         <Disclaimer />
       </main>
-
-      <nav className="safe-bottom fixed inset-x-0 bottom-0 z-20 mx-auto grid max-w-md grid-cols-5 border-t border-slate-200 bg-white/95 backdrop-blur">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => {
-              setTab(t.id);
-              window.scrollTo({ top: 0 });
-            }}
-            aria-current={tab === t.id ? "page" : undefined}
-            className={`flex flex-col items-center gap-0.5 py-2 text-[11px] ${tab === t.id ? "font-semibold text-slate-900" : "text-slate-400"}`}
-          >
-            <span className="text-lg leading-none">{t.icon}</span>
-            {t.label}
-          </button>
-        ))}
-      </nav>
     </div>
   );
 }

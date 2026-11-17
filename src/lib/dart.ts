@@ -250,7 +250,7 @@ export async function fetchOfficers(code: string, key: string): Promise<Officer[
       name: (r.nm ?? "").trim(),
       position: (r.ofcps ?? "").trim(),
       registered: (r.rgist_exctv_at ?? "").trim(),
-      duty: (r.chrg_job ?? "").trim() || undefined,
+      duty: (r.chrg_job ?? "").replace(/\s+/g, " ").replace(/^ㆍ\s*/, "").replace(/\s*ㆍ\s*/g, " · ").trim() || undefined,
     }))
     .filter((o) => o.name && !seen.has(o.name) && seen.add(o.name))
     .slice(0, 12);

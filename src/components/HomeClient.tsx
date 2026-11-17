@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { demoList } from "@/lib/demo-data";
 import { clearRecent, FAV_KEY, RECENT_KEY, useStoredList } from "@/lib/storage";
 import type { CompanyInfo } from "@/lib/types";
+import { Logo, SITE_NAME } from "./Logo";
 import { Card, Disclaimer, Notice } from "./ui";
 
 export function HomeClient() {
@@ -42,9 +43,16 @@ export function HomeClient() {
 
   return (
     <div className="min-h-dvh">
-      <header className="bg-slate-900 px-4 pb-5 pt-6 text-white">
-        <h1 className="text-xl font-bold">공시 레이더</h1>
-        <p className="mt-1 text-xs text-slate-300">공시·재무·뉴스를 모아 기업 위험도를 한눈에</p>
+      <header className="bg-slate-900 text-white">
+        <div className="rainbow-bar h-1.5" />
+        <div className="px-4 pb-5 pt-4">
+        <div className="flex items-center gap-3">
+          <Logo size={44} />
+          <div>
+            <h1 className="rainbow-text text-xl font-extrabold leading-tight">{SITE_NAME}</h1>
+            <p className="text-xs text-slate-300">공시 분석 · 공시·재무·뉴스로 기업 위험도를 한눈에</p>
+          </div>
+        </div>
         <div className="mt-4 flex items-center gap-2 rounded-xl bg-white px-3 py-2.5 text-slate-900">
           <span aria-hidden>🔍</span>
           <input
@@ -58,6 +66,7 @@ export function HomeClient() {
           {q && (
             <button onClick={() => setQ("")} aria-label="지우기" className="text-slate-400">✕</button>
           )}
+        </div>
         </div>
       </header>
 

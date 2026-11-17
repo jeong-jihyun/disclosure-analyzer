@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "공시 레이더",
-    short_name: "공시레이더",
+    name: "Disclosure Analysis",
+    short_name: "Disclosure",
     description: "공시·재무·뉴스로 기업 위험도를 한눈에",
     start_url: "/",
     display: "standalone",

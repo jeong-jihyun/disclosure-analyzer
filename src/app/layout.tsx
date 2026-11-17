@@ -2,10 +2,10 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "공시 레이더 - 기업 위험도 한눈에",
+  title: "Disclosure Analysis - 공시 분석",
   description: "공시·재무·뉴스를 모아 기업의 위험도와 안정성을 한눈에 보고 시뮬레이션하는 모바일 사이트",
-  applicationName: "공시 레이더",
-  appleWebApp: { capable: true, title: "공시 레이더", statusBarStyle: "default" },
+  applicationName: "Disclosure Analysis",
+  appleWebApp: { capable: true, title: "Disclosure Analysis", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {
