@@ -6,13 +6,16 @@ import { computeScore, GRADE_STYLE, toEok } from "@/lib/score";
 import { FAV_KEY, pushRecent, toggleFavorite, useStoredList } from "@/lib/storage";
 import type { CompanyBundle, Metrics, ScoreResult } from "@/lib/types";
 import { PartBar, Radar, ScoreGauge } from "./charts";
+import { Detail } from "./Detail";
+import { Feed } from "./Feed";
 import { Simulator } from "./Simulator";
 import { Card, Disclaimer, Notice, RiskChip, SentimentChip } from "./ui";
 
-type Tab = "summary" | "feed" | "sim" | "info";
+type Tab = "summary" | "detail" | "feed" | "sim" | "info";
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: "summary", label: "요약", icon: "📊" },
+  { id: "detail", label: "상세", icon: "📈" },
   { id: "feed", label: "공시·뉴스", icon: "📰" },
   { id: "sim", label: "시뮬레이션", icon: "🧪" },
   { id: "info", label: "기업정보", icon: "🏢" },
@@ -85,13 +88,14 @@ export function CompanyView({ code }: { code: string }) {
       <main className="flex-1 space-y-3 p-3 pb-24">
         {bundle.notice && <Notice tone={bundle.demo ? "info" : "warn"}>{bundle.notice}</Notice>}
         {tab === "summary" && <Summary bundle={bundle} score={score} />}
+        {tab === "detail" && <Detail bundle={bundle} />}
         {tab === "feed" && <Feed bundle={bundle} />}
         {tab === "sim" && <Simulator bundle={bundle} />}
         {tab === "info" && <Info bundle={bundle} />}
         <Disclaimer />
       </main>
 
-      <nav className="safe-bottom fixed inset-x-0 bottom-0 z-20 mx-auto grid max-w-md grid-cols-4 border-t border-slate-200 bg-white/95 backdrop-blur">
+      <nav className="safe-bottom fixed inset-x-0 bottom-0 z-20 mx-auto grid max-w-md grid-cols-5 border-t border-slate-200 bg-white/95 backdrop-blur">
         {TABS.map((t) => (
           <button
             key={t.id}
@@ -253,80 +257,6 @@ function MetricGrid({ m }: { m: Metrics }) {
     </div>
   );
 }
-
-// ── 공시·뉴스 탭 ───────────────────────────────────────────────────
-function Feed({ bundle }: { bundle: CompanyBundle }) {
-  const [seg, setSeg] = useState<"disc" | "news">("disc");
-  return (
-    <>
-      <div className="grid grid-cols-2 rounded-xl bg-slate-200/70 p-1 text-sm">
-        {(["disc", "news"] as const).map((s) => (
-          <button
-            key={s}
-            onClick={() => setSeg(s)}
-            className={`rounded-lg py-2 ${seg === s ? "bg-white font-semibold shadow-sm" : "text-slate-500"}`}
-          >
-            {s === "disc" ? `공시 ${bundle.disclosures.length}` : `뉴스 ${bundle.news.length}`}
-          </button>
-        ))}
-      </div>
-
-      {seg === "disc" ? (
-        bundle.disclosures.length === 0 ? (
-          <Empty text="최근 6개월 공시가 없습니다." />
-        ) : (
-          <ul className="space-y-2">
-            {bundle.disclosures.map((d) => (
-              <li key={d.id}>
-                <ExtLink href={d.url}>
-                  <p className="text-sm font-medium leading-snug">{d.title}</p>
-                  <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                    <span className="text-[11px] text-slate-400">{d.date}</span>
-                    {d.tags.map((t) => (
-                      <RiskChip key={t.label} tag={t} />
-                    ))}
-                  </div>
-                </ExtLink>
-              </li>
-            ))}
-          </ul>
-        )
-      ) : bundle.news.length === 0 ? (
-        <Empty text="최근 한 달 뉴스가 없습니다." />
-      ) : (
-        <ul className="space-y-2">
-          {bundle.news.map((n, i) => (
-            <li key={i}>
-              <ExtLink href={n.link}>
-                <p className="text-sm font-medium leading-snug">{n.title}</p>
-                <div className="mt-1.5 flex items-center gap-1.5">
-                  <SentimentChip s={n.sentiment} />
-                  <span className="text-[11px] text-slate-400">
-                    {n.source} · {n.date}
-                  </span>
-                </div>
-              </ExtLink>
-            </li>
-          ))}
-        </ul>
-      )}
-    </>
-  );
-}
-
-function ExtLink({ href, children }: { href: string; children: React.ReactNode }) {
-  const cls = "block rounded-xl bg-white p-3 shadow-sm ring-1 ring-slate-200/70 active:bg-slate-50";
-  if (!href || href === "#") return <div className={cls}>{children}</div>;
-  return (
-    <a href={href} target="_blank" rel="noopener noreferrer" className={cls}>
-      {children}
-    </a>
-  );
-}
-
-const Empty = ({ text }: { text: string }) => (
-  <p className="rounded-xl bg-white p-6 text-center text-sm text-slate-400 ring-1 ring-slate-200/70">{text}</p>
-);
 
 // ── 기업정보 탭 (7단계) ────────────────────────────────────────────
 function Info({ bundle }: { bundle: CompanyBundle }) {

@@ -75,9 +75,35 @@ export interface ScoreResult {
   metrics: Metrics;
 }
 
+export interface Shareholder {
+  name: string;
+  relation: string;
+  shares: number;
+  ratio: number; // 지분율 %
+}
+
+export interface DividendRow {
+  item: string;
+  current: string;
+  prev: string;
+  prev2: string;
+}
+
+export interface Officer {
+  name: string;
+  position: string;
+  registered: string; // 등기임원 여부
+  duty?: string;
+}
+
 export interface CompanyBundle {
   info: CompanyInfo;
   financials: Financials | null;
+  /** 최근 3개년 (오래된 해 → 최신 해) */
+  history: Financials[];
+  shareholders: Shareholder[];
+  dividends: DividendRow[];
+  officers: Officer[];
   disclosures: Disclosure[];
   news: NewsItem[];
   /** true면 실제 데이터가 아니라 데모 데이터 */

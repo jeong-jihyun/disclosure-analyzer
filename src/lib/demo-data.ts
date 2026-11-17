@@ -1,5 +1,5 @@
 import { withSentiment, withTags } from "./classify";
-import type { CompanyBundle, CompanyInfo } from "./types";
+import type { CompanyBundle, CompanyInfo, Financials } from "./types";
 
 // 데모 기업은 모두 가상입니다. 실제 기업·수치와 무관합니다.
 const eok = (n: number) => n * 1e8;
@@ -125,6 +125,28 @@ const SEEDS: DemoSeed[] = [
   },
 ];
 
+// 데모용 3개년 변화 비율 (가상): [매출, 영업이익, 부채] 오래된 해 → 최신 해
+const TREND: Record<string, [number, number, number][]> = {
+  DEMO001: [[0.82, 0.7, 1.15], [0.92, 0.85, 1.05], [1, 1, 1]],
+  DEMO002: [[1.08, 1.5, 0.85], [1.03, 1.2, 0.93], [1, 1, 1]],
+  DEMO003: [[0.5, 0.45, 0.6], [0.75, 0.7, 0.8], [1, 1, 1]],
+  DEMO004: [[1.2, 5, 0.8], [1.1, 3, 0.9], [1, 1, 1]],
+};
+
+function demoHistory(code: string, fin: Financials): Financials[] {
+  const year = fin.year;
+  return (TREND[code] ?? []).map(([r, o, d], i) => ({
+    ...fin,
+    year: year - 2 + i,
+    revenue: fin.revenue * r,
+    operatingIncome: fin.operatingIncome * o,
+    netIncome: fin.netIncome * o,
+    liabilities: fin.liabilities * d,
+    currentLiabilities: fin.currentLiabilities * d,
+    assets: fin.equity + fin.liabilities * d,
+  }));
+}
+
 export function demoList(): CompanyInfo[] {
   return SEEDS.map((s) => s.info);
 }
@@ -140,20 +162,37 @@ export function searchDemo(q: string): CompanyInfo[] {
 export function getDemoBundle(code: string, notice?: string): CompanyBundle | null {
   const seed = SEEDS.find((s) => s.info.code === code);
   if (!seed) return null;
+  const financials: Financials = {
+    year: new Date().getFullYear() - 1,
+    revenue: seed.fin.revenue,
+    operatingIncome: seed.fin.op,
+    netIncome: seed.fin.net,
+    assets: seed.fin.assets,
+    liabilities: seed.fin.liab,
+    equity: seed.fin.assets - seed.fin.liab,
+    currentAssets: seed.fin.ca,
+    currentLiabilities: seed.fin.cl,
+    interestExpense: seed.fin.interest,
+  };
   return {
     info: seed.info,
-    financials: {
-      year: new Date().getFullYear() - 1,
-      revenue: seed.fin.revenue,
-      operatingIncome: seed.fin.op,
-      netIncome: seed.fin.net,
-      assets: seed.fin.assets,
-      liabilities: seed.fin.liab,
-      equity: seed.fin.assets - seed.fin.liab,
-      currentAssets: seed.fin.ca,
-      currentLiabilities: seed.fin.cl,
-      interestExpense: seed.fin.interest,
-    },
+    history: demoHistory(code, financials),
+    shareholders: [
+      { name: "가상대표", relation: "최대주주", shares: 12000000, ratio: 21.4 },
+      { name: "가상특수관계인A", relation: "특수관계인", shares: 3100000, ratio: 5.5 },
+      { name: "가상자사주", relation: "자기주식", shares: 1500000, ratio: 2.7 },
+    ],
+    dividends: [
+      { item: "주당 현금배당금(원)", current: "500", prev: "450", prev2: "400" },
+      { item: "현금배당수익률(%)", current: "1.8", prev: "1.6", prev2: "1.5" },
+      { item: "현금배당성향(%)", current: "22.1", prev: "20.5", prev2: "19.8" },
+    ],
+    officers: [
+      { name: seed.info.ceo ?? "가상대표", position: "대표이사", registered: "등기임원", duty: "총괄" },
+      { name: "가상임원B", position: "사내이사", registered: "등기임원", duty: "재무" },
+      { name: "가상임원C", position: "사외이사", registered: "등기임원", duty: "감사위원" },
+    ],
+    financials,
     disclosures: withTags(
       seed.disclosures.map((d, i) => ({
         id: `${code}-d${i}`,

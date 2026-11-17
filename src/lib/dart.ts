@@ -1,9 +1,9 @@
 import { unzipSync, strFromU8 } from "fflate";
 import staticCorps from "../data/corps.json";
 import { withTags } from "./classify";
-import type { CompanyInfo, Disclosure, Financials } from "./types";
+import type { CompanyInfo, Disclosure, DividendRow, Financials, Officer, Shareholder } from "./types";
 
-const BASE = "https://opendart.fss.or.kr/api";
+const BASE = process.env.DART_BASE_URL ?? "https://opendart.fss.or.kr/api"; // 점검용으로 바꿀 수 있음
 
 export function dartKey(): string | null {
   const k = process.env.DART_API_KEY?.trim();
@@ -79,16 +79,30 @@ export async function fetchCompany(code: string, key: string): Promise<CompanyIn
 
 // ── 공시 목록 (10단계) ──────────────────────────────────────────────
 const ymd = (d: Date) => d.toISOString().slice(0, 10).replace(/-/g, "");
+export const PAGE_SIZE = 30;
 
-export async function fetchDisclosures(code: string, key: string): Promise<Disclosure[]> {
+export interface DisclosurePage {
+  items: Disclosure[];
+  hasMore: boolean;
+}
+
+/** 공시 종류: A 정기, B 주요사항, C 발행, D 지분, E 기타, F 외부감사, G 펀드, H 자산유동화, I 거래소, J 공정위 */
+export async function fetchDisclosuresPage(
+  code: string,
+  key: string,
+  opts: { months?: number; type?: string; page?: number } = {},
+): Promise<DisclosurePage> {
+  const months = Math.min(Math.max(opts.months ?? 6, 1), 36);
+  const page = Math.max(opts.page ?? 1, 1);
   const end = new Date();
-  const bgn = new Date(Date.now() - 180 * 86400000);
-  const url = `${BASE}/list.json?crtfc_key=${key}&corp_code=${code}&bgn_de=${ymd(bgn)}&end_de=${ymd(end)}&page_count=40`;
+  const bgn = new Date(Date.now() - months * 30 * 86400000);
+  let url = `${BASE}/list.json?crtfc_key=${key}&corp_code=${code}&bgn_de=${ymd(bgn)}&end_de=${ymd(end)}&page_no=${page}&page_count=${PAGE_SIZE}`;
+  if (opts.type && /^[A-J]$/.test(opts.type)) url += `&pblntf_ty=${opts.type}`;
   const res = await fetch(url, { next: { revalidate: 1800 } });
   const j = await res.json();
-  if (j.status === "013") return []; // 조회된 데이터 없음
+  if (j.status === "013") return { items: [], hasMore: false }; // 조회된 데이터 없음
   if (j.status !== "000") throw new Error(`list: ${j.status} ${j.message ?? ""}`);
-  return withTags(
+  const items = withTags(
     (j.list as Record<string, string>[]).map((r) => ({
       id: r.rcept_no,
       title: r.report_nm.trim(),
@@ -97,13 +111,21 @@ export async function fetchDisclosures(code: string, key: string): Promise<Discl
       url: `https://dart.fss.or.kr/dsaf001/main.do?rcpNo=${r.rcept_no}`,
     })),
   );
+  return { items, hasMore: Number(j.page_no ?? page) < Number(j.total_page ?? 1) };
 }
 
-// ── 재무제표 (8단계) ────────────────────────────────────────────────
+export async function fetchDisclosures(code: string, key: string): Promise<Disclosure[]> {
+  return (await fetchDisclosuresPage(code, key, { months: 6, page: 1 })).items;
+}
+
+// ── 재무제표 (8단계) + 3개년 추이 ───────────────────────────────────
+type Col = "thstrm_amount" | "frmtrm_amount" | "bfefrmtrm_amount";
 interface Acnt {
   account_nm: string;
   sj_div: string;
   thstrm_amount: string;
+  frmtrm_amount?: string;
+  bfefrmtrm_amount?: string;
 }
 
 const num = (s: string | undefined) => {
@@ -112,12 +134,12 @@ const num = (s: string | undefined) => {
   return Number.isFinite(n) ? n : 0;
 };
 
-function pick(list: Acnt[], sj: string[], names: string[]): number {
+function pick(list: Acnt[], sj: string[], names: string[], col: Col): number {
   for (const name of names) {
     const hit = list.find(
       (a) => sj.includes(a.sj_div) && a.account_nm.replace(/\s/g, "").startsWith(name),
     );
-    if (hit) return num(hit.thstrm_amount);
+    if (hit) return num(hit[col]);
   }
   return 0;
 }
@@ -130,29 +152,106 @@ async function fetchAccounts(code: string, key: string, year: number, fs: "CFS" 
   return j.list as Acnt[];
 }
 
-export async function fetchFinancials(code: string, key: string): Promise<Financials | null> {
+function buildFinancials(list: Acnt[], col: Col, year: number): Financials {
+  const assets = pick(list, ["BS"], ["자산총계"], col);
+  const liabilities = pick(list, ["BS"], ["부채총계"], col);
+  let equity = pick(list, ["BS"], ["자본총계"], col);
+  if (!equity) equity = assets - liabilities;
+  return {
+    year,
+    revenue: pick(list, ["IS", "CIS"], ["매출액", "수익(매출액)", "영업수익", "매출"], col),
+    operatingIncome: pick(list, ["IS", "CIS"], ["영업이익", "영업손익"], col),
+    netIncome: pick(list, ["IS", "CIS"], ["당기순이익", "당기순손익", "연결당기순이익", "분기순이익"], col),
+    assets,
+    liabilities,
+    equity,
+    currentAssets: pick(list, ["BS"], ["유동자산"], col),
+    currentLiabilities: pick(list, ["BS"], ["유동부채"], col),
+    interestExpense: pick(list, ["IS", "CIS"], ["이자비용", "금융비용", "금융원가"], col),
+  };
+}
+
+/** 사업보고서 1건에는 당기·전기·전전기 값이 함께 들어 있다 → 한 번 호출로 최대 3개년 (오래된 해 → 최신 해) */
+export async function fetchFinancialSeries(code: string, key: string): Promise<Financials[]> {
   const thisYear = new Date().getFullYear();
   for (const year of [thisYear - 1, thisYear - 2]) {
     for (const fs of ["CFS", "OFS"] as const) {
       const list = await fetchAccounts(code, key, year, fs);
       if (!list || list.length === 0) continue;
-      const assets = pick(list, ["BS"], ["자산총계"]);
-      const liabilities = pick(list, ["BS"], ["부채총계"]);
-      let equity = pick(list, ["BS"], ["자본총계"]);
-      if (!equity) equity = assets - liabilities;
-      return {
-        year,
-        revenue: pick(list, ["IS", "CIS"], ["매출액", "수익(매출액)", "영업수익", "매출"]),
-        operatingIncome: pick(list, ["IS", "CIS"], ["영업이익", "영업손익"]),
-        netIncome: pick(list, ["IS", "CIS"], ["당기순이익", "당기순손익", "연결당기순이익", "분기순이익"]),
-        assets,
-        liabilities,
-        equity,
-        currentAssets: pick(list, ["BS"], ["유동자산"]),
-        currentLiabilities: pick(list, ["BS"], ["유동부채"]),
-        interestExpense: pick(list, ["IS", "CIS"], ["이자비용", "금융비용", "금융원가"]),
-      };
+      const cols: [Col, number][] = [
+        ["bfefrmtrm_amount", year - 2],
+        ["frmtrm_amount", year - 1],
+        ["thstrm_amount", year],
+      ];
+      return cols
+        .map(([c, y]) => buildFinancials(list, c, y))
+        .filter((f) => f.assets > 0 || f.revenue > 0);
     }
   }
-  return null;
+  return [];
+}
+
+// ── 주주·배당·임원 (정기보고서 기반) ────────────────────────────────
+async function fetchReportList(endpoint: string, code: string, key: string): Promise<Record<string, string>[]> {
+  const thisYear = new Date().getFullYear();
+  for (const year of [thisYear - 1, thisYear - 2]) {
+    const url = `${BASE}/${endpoint}.json?crtfc_key=${key}&corp_code=${code}&bsns_year=${year}&reprt_code=11011`;
+    const res = await fetch(url, { next: { revalidate: 86400 } });
+    const j = await res.json();
+    if (j.status === "000" && Array.isArray(j.list) && j.list.length > 0) return j.list;
+  }
+  return [];
+}
+
+const pct = (s: string | undefined) => {
+  const n = parseFloat(String(s ?? "").replace(/,/g, ""));
+  return Number.isFinite(n) ? n : 0;
+};
+
+/** 최대주주 및 특수관계인 (지분율 높은 순, 최대 8명) */
+export async function fetchShareholders(code: string, key: string): Promise<Shareholder[]> {
+  const list = await fetchReportList("hyslrSttus", code, key);
+  const common = list.filter((r) => !r.stock_knd || r.stock_knd.includes("보통"));
+  const rows = (common.length ? common : list).map((r) => ({
+    name: (r.nm ?? "").trim(),
+    relation: (r.relate ?? "").trim(),
+    shares: num(r.trmend_posesn_stock_co),
+    ratio: pct(r.trmend_posesn_stock_qota_rt),
+  }));
+  const seen = new Set<string>();
+  return rows
+    .filter((r) => r.name && r.name !== "계" && !seen.has(r.name + r.relation) && seen.add(r.name + r.relation))
+    .sort((a, b) => b.ratio - a.ratio)
+    .slice(0, 8);
+}
+
+const DIV_KEYS = ["주당 현금배당금", "현금배당수익률", "현금배당성향", "당기순이익"];
+
+/** 배당에 관한 사항 (당기·전기·전전기) */
+export async function fetchDividends(code: string, key: string): Promise<DividendRow[]> {
+  const list = await fetchReportList("alotMatter", code, key);
+  const out: DividendRow[] = [];
+  for (const r of list) {
+    const se = (r.se ?? "").replace(/\s+/g, " ").trim();
+    if (!DIV_KEYS.some((k) => se.replace(/\s/g, "").includes(k.replace(/\s/g, "")))) continue;
+    if (r.stock_knd && !r.stock_knd.includes("보통")) continue;
+    if (out.some((o) => o.item === se)) continue;
+    out.push({ item: se, current: r.thstrm || "-", prev: r.frmtrm || "-", prev2: r.lwfr || "-" });
+  }
+  return out.slice(0, 5);
+}
+
+/** 임원 현황 (최대 12명) */
+export async function fetchOfficers(code: string, key: string): Promise<Officer[]> {
+  const list = await fetchReportList("exctvSttus", code, key);
+  const seen = new Set<string>();
+  return list
+    .map((r) => ({
+      name: (r.nm ?? "").trim(),
+      position: (r.ofcps ?? "").trim(),
+      registered: (r.rgist_exctv_at ?? "").trim(),
+      duty: (r.chrg_job ?? "").trim() || undefined,
+    }))
+    .filter((o) => o.name && !seen.has(o.name) && seen.add(o.name))
+    .slice(0, 12);
 }
