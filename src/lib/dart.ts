@@ -1,4 +1,5 @@
 import { unzipSync, strFromU8 } from "fflate";
+import staticCorps from "../data/corps.json";
 import { withTags } from "./classify";
 import type { CompanyInfo, Disclosure, Financials } from "./types";
 
@@ -18,6 +19,9 @@ interface CorpRow {
 let corpCache: { rows: CorpRow[]; at: number } | null = null;
 
 async function loadCorps(key: string): Promise<CorpRow[]> {
+  // 배포할 때 미리 만들어 둔 목록이 있으면 그것을 바로 사용 (빠름)
+  const pre = staticCorps as [string, string, string][];
+  if (pre.length > 0) return pre.map(([code, name, stock]) => ({ code, name, stock }));
   if (corpCache && Date.now() - corpCache.at < 24 * 3600 * 1000) return corpCache.rows;
   const res = await fetch(`${BASE}/corpCode.xml?crtfc_key=${key}`, { cache: "no-store" });
   if (!res.ok) throw new Error(`corpCode ${res.status}`);

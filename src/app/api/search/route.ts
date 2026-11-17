@@ -2,6 +2,8 @@ import { NextRequest } from "next/server";
 import { dartKey, searchCorps } from "@/lib/dart";
 import { demoList, searchDemo } from "@/lib/demo-data";
 
+export const maxDuration = 60; // 미리 만든 목록이 없을 때 실시간 다운로드 대비
+
 export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get("q") ?? "";
   const key = dartKey();
