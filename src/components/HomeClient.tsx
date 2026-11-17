@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { demoList } from "@/lib/demo-data";
 import { clearRecent, FAV_KEY, RECENT_KEY, useStoredList } from "@/lib/storage";
 import type { CompanyInfo } from "@/lib/types";
 import { Logo, SITE_NAME } from "./Logo";
@@ -93,12 +92,22 @@ export function HomeClient() {
                 <List items={recent} />
               </Card>
             )}
-            <Card title="데모 기업 (가상)">
-              <p className="mb-2 text-xs text-slate-400">
-                실제 기업이 아닌 가상 기업입니다. 안정 → 위험 순서로 점수 화면을 미리 볼 수 있어요.
-              </p>
-              <List items={demoList()} />
-            </Card>
+            {favs.length === 0 && recent.length === 0 && (
+              <Card title="회사를 찾아보세요">
+                <p className="mb-3 text-xs text-slate-400">위 검색창에 회사명이나 종목코드를 입력하세요. 예를 들어</p>
+                <div className="flex flex-wrap gap-2">
+                  {["삼성전자", "네이버", "카카오", "현대차"].map((n) => (
+                    <button
+                      key={n}
+                      onClick={() => setQ(n)}
+                      className="rounded-full bg-slate-100 px-3 py-1.5 text-sm text-slate-700 active:bg-slate-200"
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+              </Card>
+            )}
           </>
         )}
         <Disclaimer />

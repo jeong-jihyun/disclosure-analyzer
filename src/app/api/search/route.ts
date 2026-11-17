@@ -1,6 +1,5 @@
 import { NextRequest } from "next/server";
 import { dartKey, searchCorps } from "@/lib/dart";
-import { demoList, searchDemo } from "@/lib/demo-data";
 
 export const maxDuration = 60; // 미리 만든 목록이 없을 때 실시간 다운로드 대비
 
@@ -10,9 +9,9 @@ export async function GET(req: NextRequest) {
 
   if (!key) {
     return Response.json({
-      results: searchDemo(q),
-      demo: true,
-      notice: "DART 인증키가 없어 데모 기업만 보여 드립니다.",
+      results: [],
+      demo: false,
+      notice: "DART 인증키가 설정되지 않아 검색할 수 없습니다. 환경변수 DART_API_KEY를 확인해 주세요.",
     });
   }
 
@@ -21,9 +20,9 @@ export async function GET(req: NextRequest) {
     return Response.json({ results, demo: false });
   } catch (e) {
     return Response.json({
-      results: q ? searchDemo(q) : demoList(),
-      demo: true,
-      notice: `공시 서버 연결에 실패해 데모 기업을 보여 드립니다. (${(e as Error).message})`,
+      results: [],
+      demo: false,
+      notice: `공시 서버에 연결하지 못했습니다. 잠시 뒤 다시 시도해 주세요. (${(e as Error).message})`,
     });
   }
 }
