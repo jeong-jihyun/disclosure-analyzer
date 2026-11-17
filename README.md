@@ -1,36 +1,35 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 공시 레이더 (disclosure-analyzer)
 
-## Getting Started
+공시·재무·뉴스를 모아 **기업 위험도/안정성을 한눈에** 보고, 충격 상황을 가정한 **시뮬레이션**까지 해 보는 모바일 우선 사이트입니다. 참고용이며 투자 권유가 아닙니다.
 
-First, run the development server:
+## 화면
+- 홈: 회사명/종목코드 검색, ★관심 기업, 최근 본 기업, 가상 데모 기업
+- 요약: 안정성 점수 게이지, 영역별 레이더, 핵심 지표 4개, 눈여겨볼 신호, 재무 요약
+- 공시·뉴스: 최근 6개월 공시(위험 태그), 최근 한 달 뉴스(긍정/부정)
+- 시뮬레이션: 매출·부채·금리 슬라이더와 프리셋(경기침체·금리충격·부채위기·호황)
+- 기업정보: 기업 개황과 바로가기
 
-```bash
+## 점수 (0~100, 높을수록 안정)
+재무 안정성 40 + 수익성 25 + 공시 신호 20 + 뉴스 분위기 15. 80+ 안정 / 60+ 보통 / 40+ 주의 / 미만 위험. 자세한 기준은 `docs/DESIGN.md`.
+
+## 실행 (Windows PowerShell)
+```powershell
+npm install
+copy .env.example .env.local   # DART_API_KEY= 뒤에 무료 인증키 입력 (없어도 데모는 동작)
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```
+http://localhost:3000 을 폰 크기 화면으로 열어 보세요.
+
+## 점검 스크립트
+```powershell
+npx tsx scripts/check-scores.ts      # 데모 기업 점수·시뮬레이션
+npx tsx scripts/check-parsers.mts    # DART·뉴스 해석 로직(가짜 응답)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 데이터 출처 (모두 무료)
+오픈DART API(공시·개황·재무), 구글 뉴스 RSS, 배포는 Vercel 무료 플랜. 데모 기업은 모두 가상입니다.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 한계
+- 점수는 단순 규칙(키워드·재무비율)이라 실제 위험과 다를 수 있습니다.
+- 뉴스 긍정/부정은 제목 키워드로만 판단합니다.
+- 금융업 등 계정 이름이 다른 회사는 일부 지표가 0으로 나올 수 있습니다.
