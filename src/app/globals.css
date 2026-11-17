@@ -33,12 +33,12 @@ input[type="range"] {
   height: 28px;
 }
 
-/* 무지개 그라데이션 (상단바 줄·로고 글자·선택 탭 밑줄) */
+/* 녹색→파랑 그라데이션 (상단바 줄·로고 글자·선택 탭 밑줄) */
 .rainbow-bar {
-  background: linear-gradient(90deg, #ef4444 0%, #f97316 6%, #eab308 12%, #22c55e 22%, #06b6d4 36%, #38bdf8 50%, #3b82f6 66%, #6366f1 84%, #a855f7 100%);
+  background: linear-gradient(90deg, #22c55e 0%, #14b8a6 30%, #0ea5e9 65%, #3b82f6 100%);
 }
 .rainbow-text {
-  background: linear-gradient(90deg, #f87171 0%, #fb923c 6%, #facc15 12%, #4ade80 22%, #22d3ee 36%, #38bdf8 50%, #60a5fa 66%, #818cf8 84%, #c084fc 100%);
+  background: linear-gradient(90deg, #4ade80 0%, #2dd4bf 30%, #38bdf8 65%, #60a5fa 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
