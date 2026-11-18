@@ -10,7 +10,8 @@ import { Detail } from "./Detail";
 import { Logo, SITE_NAME } from "./Logo";
 import { Feed } from "./Feed";
 import { Simulator } from "./Simulator";
-import { Card, Disclaimer, Notice, RiskChip, SentimentChip } from "./ui";
+import { lawsFor } from "@/lib/laws";
+import { Card, Disclaimer, LawLinks, Notice, RiskChip, SentimentChip } from "./ui";
 
 type Tab = "summary" | "detail" | "feed" | "sim" | "info";
 
@@ -185,9 +186,12 @@ function Summary({ bundle, score }: { bundle: CompanyBundle; score: ScoreResult 
         ) : (
           <ul className="space-y-2 text-sm">
             {Object.entries(topTags).map(([label, v]) => (
-              <li key={label} className="flex items-center justify-between">
-                <RiskChip tag={{ label, severity: v.sev as 2 | 3 }} />
-                <span className="text-slate-500">최근 공시 {v.n}건</span>
+              <li key={label} className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <RiskChip tag={{ label, severity: v.sev as 2 | 3 }} />
+                  <span className="text-slate-500">최근 공시 {v.n}건</span>
+                </div>
+                <LawLinks laws={lawsFor([label])} />
               </li>
             ))}
             {negNews > 0 && (

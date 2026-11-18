@@ -56,3 +56,24 @@ export function Disclaimer() {
     </p>
   );
 }
+
+/** 관련 법령 링크 (국가법령정보센터로 이동) */
+export function LawLinks({ laws }: { laws: { text: string; url: string }[] }) {
+  if (laws.length === 0) return null;
+  return (
+    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px]">
+      <span className="text-slate-400">관련 법령</span>
+      {laws.map((l) => (
+        <a
+          key={l.url}
+          href={l.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="rounded-md bg-sky-50 px-1.5 py-0.5 font-medium text-sky-700 active:bg-sky-100"
+        >
+          {l.text}
+        </a>
+      ))}
+    </div>
+  );
+}

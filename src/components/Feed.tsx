@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { explainDisclosure, TONE_STYLE } from "@/lib/explain";
 import type { CompanyBundle, Disclosure } from "@/lib/types";
-import { RiskChip, SentimentChip } from "./ui";
+import { lawsFor } from "@/lib/laws";
+import { LawLinks, RiskChip, SentimentChip } from "./ui";
 
 const PERIODS = [
   { months: 6, label: "6개월" },
@@ -129,6 +130,7 @@ function DisclosureList({ bundle }: { bundle: CompanyBundle }) {
 function DisclosureCard({ d }: { d: Disclosure }) {
   const [open, setOpen] = useState(false);
   const ex = explainDisclosure(d.title);
+  const laws = lawsFor(d.tags.map((t) => t.label));
   const cls = "block rounded-t-xl p-3 active:bg-slate-50";
   const body = (
     <>
@@ -149,6 +151,11 @@ function DisclosureCard({ d }: { d: Disclosure }) {
         </a>
       ) : (
         <div className={cls}>{body}</div>
+      )}
+      {laws.length > 0 && (
+        <div className="px-3 pb-2.5">
+          <LawLinks laws={laws} />
+        </div>
       )}
       {ex && (
         <div className="border-t border-slate-100">
