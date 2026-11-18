@@ -165,11 +165,16 @@ function OfficerCard({ bundle }: { bundle: CompanyBundle }) {
       ) : (
         <ul className="divide-y divide-slate-100 text-sm">
           {list.map((o, i) => (
-            <li key={o.name + i} className="flex items-center justify-between py-2">
-              <span className="font-medium">{o.name}</span>
-              <span className="text-right text-xs text-slate-500">
-                {[o.position, o.registered, o.duty].filter(Boolean).join(" · ")}
-              </span>
+            <li key={o.name + i} className="py-2.5">
+              <div className="flex items-baseline justify-between gap-3">
+                <span className="shrink-0 whitespace-nowrap font-medium">{o.name}</span>
+                <span className="text-right text-xs text-slate-500 [word-break:keep-all]">
+                  {[o.position, o.registered].filter(Boolean).join(" · ")}
+                </span>
+              </div>
+              {o.duty && (
+                <p className="mt-1 text-xs leading-relaxed text-slate-400 [word-break:keep-all]">{o.duty}</p>
+              )}
             </li>
           ))}
         </ul>
